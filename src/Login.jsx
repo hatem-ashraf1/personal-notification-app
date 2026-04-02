@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { messaging } from "./firebase";
 import { getToken } from "firebase/messaging";
+import { ref, set } from "firebase/database"; 
+import { db, messaging } from "./firebase";
 
 export function Login({ username, setUsername }) {
   const navigate = useNavigate();
@@ -19,11 +21,15 @@ export function Login({ username, setUsername }) {
         });
 
         if (token) {
-          console.log("FCM Token:", token);
+  console.log("FCM Token:", token);
+  
+  await set(ref(db, 'users/' + username), {
+    fcmToken: token,
+    lastLogin: new Date().toISOString()
+  });
 
-          // ✅ SAVE TOKEN LOCALLY (important)
-          localStorage.setItem("fcm_token", token);
-        } else {
+  localStorage.setItem("fcm_token", token);
+} else {
           console.warn("No token received");
         }
       } else {
