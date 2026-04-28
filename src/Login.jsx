@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { messaging } from "./firebase";
 import { getToken } from "firebase/messaging";
+import { subscribeToTopic } from "./fcmHelper";
 
 export function Login({ username, setUsername }) {
   const navigate = useNavigate();
@@ -15,14 +16,23 @@ export function Login({ username, setUsername }) {
 
       if (permission === "granted") {
         const token = await getToken(messaging, {
-          vapidKey: "BIUp3q-F-yAOvA93vtUQXv_8ljspblXNbiCwLWYr5r-lvMkH39KAdy9LcVZskTv1GSdWWpQb-SAsy0fHFZXd7fw"
+          vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY || "BOIpzGAZEj9P1Il5IygJ5LerbduoHqFlhtlZ18GksOcr44YrdJ39xbCjuK7jDzdJWtdpltrbi2t9BgGz4f9Xbwo"
         });
+
+        console.log("🔑 VAPID key used:", !!(import.meta.env.VITE_FIREBASE_VAPID_KEY));
 
         if (token) {
           console.log("FCM Token:", token);
 
-          // ✅ SAVE TOKEN LOCALLY (important)
+          // SAVE TOKEN LOCALLY (important)
           localStorage.setItem("fcm_token", token);
+
+          //  REAL TOPIC SUBSCRIPTION
+          const normalizedUsername = username.toLowerCase().replaceAll(" ", "").trim();
+          const topic = `user_${normalizedUsername}`;
+
+          await subscribeToTopic(token, topic);
+          localStorage.setItem("fcm_topic", topic);
         } else {
           console.warn("No token received");
         }

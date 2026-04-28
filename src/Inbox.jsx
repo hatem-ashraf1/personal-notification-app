@@ -3,12 +3,24 @@ import { db, messaging } from "./firebase";
 import { ref, onValue, push, set } from "firebase/database";
 import { onMessage } from "firebase/messaging";
 import { useNavigate } from "react-router-dom";
+import { unsubscribeFromTopic } from "./fcmHelper";
 
 function Inbox({ username, setUsername }) {
   const [notifications, setNotifications] = useState([]);
   const navigate = useNavigate();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    //  TOPIC UNSUBSCRIPTION
+    const token = localStorage.getItem("fcm_token");
+    const topic = localStorage.getItem("fcm_topic");
+
+    if (token && topic) {
+      await unsubscribeFromTopic(token, topic);
+    }
+
+    // Clear stored data
+    localStorage.removeItem("fcm_token");
+    localStorage.removeItem("fcm_topic");
     setUsername("");
     navigate("/");
   };

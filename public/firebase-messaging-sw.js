@@ -14,27 +14,24 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 
-self.addEventListener("push", function (event) {
-  console.log("Push received:", event);
+const messaging = firebase.messaging();
 
-  if (!event.data) return;
-
-  const payload = event.data.json();
-  console.log("Payload:", payload);
+messaging.onBackgroundMessage((payload) => {
+  console.log("Background message received:", payload);
 
   const title = payload.notification?.title || "No title";
   const body = payload.notification?.body || "No body";
-  const dynamicUser = payload.data?.target_user || "unknown_user";
+  const targetUser = payload.data?.target_user || "unknown_user";
+
   const db = firebase.database();
-  db.ref(`notifications/${dynamicUser}`).push({
+  db.ref(`notifications/${targetUser}`).push({
     title: title,
     body: body,
     timestamp: Date.now()
   });
-  event.waitUntil(
-    self.registration.showNotification(title, {
-      body: body,
-      icon: "/vite.svg"
-    })
-  );
+
+  return self.registration.showNotification(title, {
+    body: body,
+    icon: "/vite.svg"
+  });
 });
